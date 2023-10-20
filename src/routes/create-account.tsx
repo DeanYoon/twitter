@@ -1,39 +1,19 @@
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useState } from "react";
 
-import styled from "styled-components";
 import { auth } from "../firebase";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { FirebaseError } from "firebase/app";
+import {
+  Error,
+  Input,
+  Switcher,
+  Title,
+  Wrapper,
+  Form,
+} from "../components/auth-components";
+import GithubButton from "../components/github-button";
 
-const Wrapper = styled.div`
-  width: 50vw;
-`;
-const Title = styled.div`
-  padding: 10px;
-  text-align: center;
-  font-size: 40px;
-  margin-bottom: 20px;
-`;
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-`;
-const Input = styled.input`
-  margin-bottom: 5px;
-  border-radius: 50px;
-  height: 30px;
-  padding-left: 20px;
-  &[type="submit"] {
-    padding: 0;
-    cursor: pointer;
-    &:hover {
-      opacity: 0.8;
-      transition: opacity 0.1s ease-in-out;
-    }
-  }
-`;
-
-const Error = styled.div``;
 export default function CreateAccount() {
   const navigate = useNavigate();
   const [isLoading, setLoading] = useState(false);
@@ -55,6 +35,7 @@ export default function CreateAccount() {
   };
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError("");
     if (isLoading || name === "" || email === "" || password === "") return;
 
     try {
@@ -72,7 +53,9 @@ export default function CreateAccount() {
       navigate("/");
     } catch (e) {
       // setError
-      console.log(e);
+      if (e instanceof FirebaseError) {
+        setError(e.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -111,6 +94,11 @@ export default function CreateAccount() {
         />
       </Form>
       {error !== "" ? <Error>{error}</Error> : null}
+      <Switcher>
+        Already have an account?
+        <Link to="/login">Log in →</Link>
+      </Switcher>
+      <GithubButton />
     </Wrapper>
   );
 }
