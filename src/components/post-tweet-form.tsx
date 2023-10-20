@@ -1,5 +1,8 @@
-import { useState } from "react";
+import { addDoc, collection, updateDoc } from "firebase/firestore";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
+import { auth, db, storage } from "../firebase";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 const Form = styled.form`
   display: flex;
@@ -58,21 +61,57 @@ export default function PostTweetForm() {
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { files } = e.target;
     if (files && files.length === 1) {
-      setFile(files[0]);
+      if (files[0]?.size < 1000000) {
+        setFile(files[0]);
+      } else {
+        alert("image file size should be less than 1Mb");
+      }
     }
   };
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(tweet, file);
+    const user = auth.currentUser;
+    if (!user || isLoading || tweet === "" || tweet.length > 180) return;
+    try {
+      setIsLoading(true);
+      const doc = await addDoc(collection(db, "tweets"), {
+        tweet,
+        createdAt: Date.now(),
+        username: user.displayName || "Anonymous",
+        userId: user.uid,
+      });
+
+      if (file) {
+        const locationRef = ref(
+          storage,
+          `tweets/${user.uid}-${user.displayName}/${doc.id}`
+        );
+        const result = await uploadBytes(locationRef, file);
+        const url = await getDownloadURL(result.ref);
+        console.log(url);
+
+        await updateDoc(doc, {
+          photo: url,
+        });
+
+        setTweet("");
+        setFile(null);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
   };
   return (
     <Form onSubmit={onSubmit}>
       <TextArea
         value={tweet}
-        maxLength={1000}
+        maxLength={180}
         onChange={onChange}
         placeholder="What is happening?"
+        required
       />
       <AttachFileButton htmlFor="file">
         {file ? "Photo Added✅" : "Add photo"}
