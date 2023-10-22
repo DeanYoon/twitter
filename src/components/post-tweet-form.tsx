@@ -1,8 +1,15 @@
-import { addDoc, collection, updateDoc } from "firebase/firestore";
+import { doc, addDoc, collection, updateDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { auth, db, storage } from "../firebase";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import {
+  deleteObject,
+  getDownloadURL,
+  ref,
+  uploadBytes,
+} from "firebase/storage";
+import { useRecoilState } from "recoil";
+import { defaultEditPostData, editPostData, isEditPost } from "../atoms";
 
 const Form = styled.form`
   display: flex;
@@ -17,11 +24,11 @@ const TextArea = styled.textarea`
   color: white;
   width: 100%;
   resize: none;
+  font-family: BlinkMacSystemFont;
+  font-size: 16px;
   &::placeholder {
     font-size: 16px;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-      Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
-      sans-serif;
+    font-family: BlinkMacSystemFont;
   }
 
   &:focus {
@@ -54,6 +61,8 @@ const SubmitBtn = styled.input`
 export default function PostTweetForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [tweet, setTweet] = useState("");
+  const [editData, setEditData] = useRecoilState(editPostData);
+  const [isEditState, setIsEditState] = useRecoilState(isEditPost);
   const [file, setFile] = useState<File | null>(null);
   const onChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setTweet(e.target.value);
@@ -71,39 +80,54 @@ export default function PostTweetForm() {
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    let docRef;
+
     const user = auth.currentUser;
     if (!user || isLoading || tweet === "" || tweet.length > 180) return;
     try {
       setIsLoading(true);
-      const doc = await addDoc(collection(db, "tweets"), {
-        tweet,
-        createdAt: Date.now(),
-        username: user.displayName || "Anonymous",
-        userId: user.uid,
-      });
+
+      if (isEditState) {
+        docRef = doc(db, "tweets", editData.id);
+        await updateDoc(docRef, {
+          tweet,
+        });
+      } else {
+        docRef = await addDoc(collection(db, "tweets"), {
+          tweet,
+          createdAt: Date.now(),
+          username: user.displayName || "Anonymous",
+          userId: user.uid,
+        });
+      }
 
       if (file) {
-        const locationRef = ref(
-          storage,
-          `tweets/${user.uid}-${user.displayName}/${doc.id}`
-        );
+        const locationRef = ref(storage, `tweets/${user.uid}/${docRef.id}`);
+        if (editData.photo) {
+          await deleteObject(locationRef);
+        }
         const result = await uploadBytes(locationRef, file);
         const url = await getDownloadURL(result.ref);
-        console.log(url);
 
-        await updateDoc(doc, {
+        await updateDoc(docRef, {
           photo: url,
         });
 
-        setTweet("");
         setFile(null);
       }
+      setTweet("");
+      setEditData(defaultEditPostData);
+      setIsEditState(false);
     } catch (e) {
       console.error(e);
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    setTweet(editData.tweet);
+  }, [editData]);
   return (
     <Form onSubmit={onSubmit}>
       <TextArea
