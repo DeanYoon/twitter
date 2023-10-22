@@ -14,7 +14,6 @@ import { defaultEditPostData, editPostData, isEditPost } from "../atoms";
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  width: 500px;
 `;
 const TextArea = styled.textarea`
   height: 100px;

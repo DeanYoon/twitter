@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 export const Wrapper = styled.div`
-  width: 50vw;
+  width: 300px;
 `;
 export const Title = styled.div`
   padding: 10px;
@@ -16,11 +16,12 @@ export const Form = styled.form`
 export const Input = styled.input`
   margin-bottom: 5px;
   border-radius: 50px;
-  height: 30px;
+  height: 40px;
   padding-left: 20px;
   &[type="submit"] {
     padding: 0;
     cursor: pointer;
+    margin-top: 10px;
     &:hover {
       opacity: 0.8;
       transition: opacity 0.1s ease-in-out;

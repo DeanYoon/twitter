@@ -13,8 +13,13 @@ const Wrapper = styled.div`
   padding: 30px;
   border-radius: 20px;
   margin-bottom: 20px;
+  font-size: 16px;
 `;
 const Column = styled.div``;
+const UserImg = styled.img`
+  width: 50px;
+  height: 50px;
+`;
 const Photo = styled.img`
   width: 100px;
   height: 100px;
@@ -57,6 +62,7 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
   return (
     <Wrapper>
       <Column>
+        <UserImg src="/" />
         <Username>{username}</Username>
         <Payload>{tweet}</Payload>
         {user?.uid === userId ? (
