@@ -5,7 +5,6 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { updateProfile } from "firebase/auth";
 import {
   collection,
-  getDoc,
   getDocs,
   limit,
   orderBy,
@@ -92,7 +91,7 @@ export default function Profile() {
   const { register, handleSubmit, watch } = useForm();
   const user = auth.currentUser;
   const [avatar, setAvatar] = useState(user?.photoURL);
-  const [newAvatar, setNewAvatar] = useState("");
+
   const [tweets, setTweets] = useState<ITweet[]>([]);
   const [username, setUsername] = useState(user?.displayName ?? "Anonymous"); // Add username state
 
