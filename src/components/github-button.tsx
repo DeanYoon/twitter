@@ -5,6 +5,8 @@ import { auth } from "../firebase";
 import { GithubAuthProvider, signInWithPopup } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
+import { FirebaseError } from "firebase/app";
+
 const Button = styled.button`
   margin-top: 50px;
   border-radius: 100px;
@@ -22,6 +24,7 @@ const Button = styled.button`
 
 export default function GithubButton() {
   const navigate = useNavigate();
+
   const onClick = async () => {
     try {
       const provider = new GithubAuthProvider();
@@ -29,6 +32,9 @@ export default function GithubButton() {
       navigate("/");
     } catch (error) {
       console.error(error);
+      if (error instanceof FirebaseError) {
+        alert(error.message);
+      }
     }
   };
   return (
