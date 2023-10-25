@@ -5,7 +5,6 @@ import { deleteDoc, doc } from "firebase/firestore";
 import { deleteObject, getDownloadURL, ref } from "firebase/storage";
 import { useEffect, useState } from "react";
 
-import PostTweetForm from "./post-tweet-form";
 import EditTweetForm from "./edit-tweet-form";
 
 const Wrapper = styled.div`

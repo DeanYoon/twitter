@@ -160,7 +160,6 @@ export default function Profile() {
       );
       const snapshot = await getDocs(tweetQuery);
       snapshot.forEach(async (tweet) => {
-        console.log(tweet);
         await updateDoc(tweet.ref, { username });
       });
     }

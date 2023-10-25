@@ -1,13 +1,8 @@
-import { doc, addDoc, collection, updateDoc } from "firebase/firestore";
+import { addDoc, collection, updateDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { auth, db, storage } from "../firebase";
-import {
-  deleteObject,
-  getDownloadURL,
-  ref,
-  uploadBytes,
-} from "firebase/storage";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useForm } from "react-hook-form";
 
 export const Form = styled.form`
@@ -59,36 +54,27 @@ export const SubmitBtn = styled.input`
 export default function PostTweetForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const { register, handleSubmit, watch } = useForm();
-  const [tweet, setTweet] = useState("");
-  // const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const { files } = e.target;
-  //   if (files && files.length === 1) {
-  //     if (files[0]?.size < 10 * 1024 * 1024) {
-  //       setFile(files[0]);
-  //     } else {
-  //       alert("image file size should be less than 1Mb");
-  //     }
-  //   }
-  // };
+  const { register, handleSubmit, watch, reset } = useForm();
 
-  const onFileChange = watch("file");
+  const files = watch("file");
   useEffect(() => {
-    if (onFileChange) {
-      setFile(onFileChange[0]);
-      // console.log(onFileChange[0]);
+    if (files && files.length === 1) {
+      if (files[0]?.size < 2 * 1024 * 1024) {
+        setFile(files[0]);
+      } else {
+        alert("image file size should be less than 1Mb");
+      }
     }
-  }, [onFileChange]);
+  }, [files]);
 
   const onSubmit = async (data: any) => {
     const { tweet, file } = data;
-    console.log(file[0]);
+
     let docRef;
     const user = auth.currentUser;
     if (!user || isLoading || tweet === "" || tweet.length > 180) return;
     try {
       setIsLoading(true);
-
       {
         docRef = await addDoc(collection(db, "tweets"), {
           tweet,
@@ -107,12 +93,10 @@ export default function PostTweetForm() {
         await updateDoc(docRef, {
           photo: url,
         });
-
-        setFile(null);
       }
 
-      setTweet("");
       setFile(null);
+      reset();
     } catch (e) {
       console.error(e);
     } finally {
@@ -123,10 +107,8 @@ export default function PostTweetForm() {
   return (
     <Form onSubmit={handleSubmit(onSubmit)}>
       <TextArea
-        value={tweet}
         maxLength={180}
         {...register("tweet")}
-        onChange={(e) => setTweet(e.target.value)}
         placeholder="What is happening?"
         required
       />
