@@ -1,11 +1,12 @@
 import styled from "styled-components";
 import { ITweet } from "./timeline";
 import { auth, db, storage } from "../firebase";
-import { deleteDoc, doc, getDoc } from "firebase/firestore";
+import { deleteDoc, doc } from "firebase/firestore";
 import { deleteObject, getDownloadURL, ref } from "firebase/storage";
-import { useSetRecoilState } from "recoil";
-import { editPostData, isEditPost } from "../atoms";
 import { useEffect, useState } from "react";
+
+import PostTweetForm from "./post-tweet-form";
+import EditTweetForm from "./edit-tweet-form";
 
 const Wrapper = styled.div`
   border: 1px solid rgba(255, 255, 255, 0.4);
@@ -30,7 +31,7 @@ const UserRow = styled.div`
   img {
     width: 50px;
     height: 50px;
-    border: 1px solid white;
+
     border-radius: 100px;
     margin-right: 10px;
   }
@@ -62,8 +63,7 @@ const Button = styled.div`
   cursor: pointer;
 `;
 export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
-  const setEditPostData = useSetRecoilState(editPostData);
-  const setIsEdit = useSetRecoilState(isEditPost);
+  const [isEdit, setIsEdit] = useState(false);
   const user = auth.currentUser;
   const [ownerPhoto, setOwnerPhoto] = useState("");
   const onDelete = async () => {
@@ -82,7 +82,6 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
   };
 
   const onEdit = async () => {
-    setEditPostData({ username, photo, tweet, userId, id });
     setIsEdit(true);
   };
 
@@ -126,10 +125,19 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
           ) : null}
         </UserRow>
       </Row>
-      <Column>
-        {photo ? <Photo src={photo} /> : null}
-        <Payload>{tweet}</Payload>
-      </Column>
+      {isEdit ? (
+        <EditTweetForm
+          photo={photo}
+          editTweet={tweet}
+          setIsEdit={setIsEdit}
+          id={id}
+        />
+      ) : (
+        <Column>
+          <Payload>{tweet}</Payload>
+          {photo ? <Photo src={photo} /> : null}
+        </Column>
+      )}
     </Wrapper>
   );
 }
